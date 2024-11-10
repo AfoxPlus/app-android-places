@@ -18,6 +18,11 @@
             android:theme="@style/UIKit.NoActionBar.Light" />
 
         <activity
+            android:name=".ui.MapActivity"
+            android:exported="true"
+            android:theme="@style/UIKit.NoActionBar.Light" />
+        
+        <activity
             android:name="com.afoxplus.demo_config.delivery.views.activities.DemoConfigStartActivity"
             android:exported="true"
             android:theme="@style/UIKit.NoActionBar.Light">
@@ -27,5 +32,8 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="@string/GOOGLE_MAPS_API_KEY" />
     </application>
 </manifest>
