@@ -23,6 +23,7 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.compose.rememberNavController
 import com.afoxplus.module.delivery.components.ChipsComponent
 import com.afoxplus.module.delivery.components.EstablishmentsComponent
 import com.afoxplus.module.delivery.components.LocationButton
@@ -62,6 +63,8 @@ internal fun MapScreen(
     val chips = mapViewModel.chips.collectAsStateWithLifecycle()
     val establishmentState = mapViewModel.establishments.collectAsStateWithLifecycle()
     val markers = mapViewModel.markers.collectAsState()
+
+    val navController = rememberNavController()
 
     activity.getCurrentLocation { location ->
         mapViewModel.setLocation(location)
