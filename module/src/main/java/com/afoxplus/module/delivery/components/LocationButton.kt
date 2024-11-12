@@ -21,8 +21,8 @@ import com.afoxplus.uikit.designsystem.foundations.UIKitTheme
 fun LocationButton(modifier: Modifier = Modifier, onClick: () -> Unit) {
     Box(
         modifier = modifier
-            .size(48.dp)
-            .background(Color.White, shape = CircleShape)
+            .size(32.dp)
+            .background(UIKitTheme.colors.light01, shape = CircleShape)
             .clickable(onClick = onClick)
             .padding(8.dp),
         contentAlignment = Alignment.Center
@@ -31,7 +31,7 @@ fun LocationButton(modifier: Modifier = Modifier, onClick: () -> Unit) {
             modifier = Modifier
                 .width(24.dp)
                 .height(24.dp),
-            icon = UIKitTheme.icons.icon_plus
+            icon = UIKitTheme.icons.icon_current_location
         )
     }
 }

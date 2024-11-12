@@ -6,6 +6,7 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import com.afoxplus.uikit.designsystem.businesscomponents.UIKitChipCollection
+import com.afoxplus.uikit.designsystem.businesscomponents.UIKitChipCollectionShimmer
 import com.afoxplus.uikit.objects.vendor.ChipItem
 import com.afoxplus.uikit.views.status.ListEmptyData
 import com.afoxplus.uikit.views.status.ListError
@@ -31,7 +32,7 @@ fun ChipsComponent(
         }
 
         is ListLoading<ChipItem> -> {
-
+            UIKitChipCollectionShimmer(modifier)
         }
 
         is ListError<ChipItem> -> {

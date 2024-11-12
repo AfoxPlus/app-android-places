@@ -57,7 +57,7 @@ class MapViewModel @Inject constructor(
         try {
             mChips.value = ListLoading()
             val results = fetchCategories.invoke()
-            mChips.value = ListSuccess(results.map { ChipItem("", false, it) })
+            //mChips.value = ListSuccess(results.map { ChipItem("", false, it) })
         } catch (ex: Exception) {
             mChips.value = ListError(ex)
         }
@@ -76,7 +76,7 @@ class MapViewModel @Inject constructor(
                             it.longitude
                         )
                     })
-                mEstablishments.value = ListSuccess(results.map {
+               /* mEstablishments.value = ListSuccess(results.map {
                     Establishment(
                         imageLandscape = it.imageBanner,
                         imagePortrait = it.imageLogo,
@@ -88,7 +88,7 @@ class MapViewModel @Inject constructor(
                         addressDescription = it.address,
                         phoneDescription = it.phone
                     )
-                })
+                })*/
                 mMarkers.value = results
             } catch (ex: Exception) {
                 mMarkers.value = listOf()

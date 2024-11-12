@@ -1,10 +1,23 @@
 package com.afoxplus.module.delivery.screens
 
 import android.app.Activity
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
@@ -101,9 +114,9 @@ internal fun MapScreen(
 
         ChipsComponent(
             modifier = Modifier.constrainAs(chipsRow) {
-                top.linkTo(searchBar.bottom, margin = 8.dp)
-                start.linkTo(parent.start, margin = 16.dp)
-                end.linkTo(parent.end, margin = 16.dp)
+                top.linkTo(searchBar.bottom, margin = 6.dp)
+                start.linkTo(parent.start)
+                end.linkTo(parent.end)
                 width = Dimension.fillToConstraints
             },
             chipState = chips
@@ -111,16 +124,18 @@ internal fun MapScreen(
             mapViewModel.selectedChips(selectedChips)
         }
 
-        EstablishmentsComponent(
-            establishmentState = establishmentState,
-            modifier = Modifier.constrainAs(establishmentsCard) {
-                bottom.linkTo(parent.bottom, margin = 16.dp)
-                start.linkTo(parent.start)
-                end.linkTo(parent.end)
-                width = Dimension.fillToConstraints
+        Box(modifier = Modifier.constrainAs(establishmentsCard) {
+            bottom.linkTo(parent.bottom, margin = 16.dp)
+            start.linkTo(parent.start)
+            end.linkTo(parent.end)
+            width = Dimension.fillToConstraints
+        }) {
+            EstablishmentsComponent(
+                establishmentState = establishmentState,
+                modifier = Modifier.fillMaxWidth()
+            ) { establishment ->
+                mapViewModel.onEstablishmentClick(establishment)
             }
-        ) { establishment ->
-            mapViewModel.onEstablishmentClick(establishment)
         }
 
         LocationButton(
@@ -143,3 +158,4 @@ internal fun MapScreen(
         )
     }
 }
+
