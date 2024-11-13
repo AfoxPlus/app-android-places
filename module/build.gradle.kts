@@ -26,7 +26,7 @@ if (localProperties.exists()) {
 val googleMapsApiKey: String = properties.getProperty("GOOGLE_MAPS_API_KEY") ?: ""
 
 android {
-    namespace = "com.afoxplus.module"
+    namespace = "com.afoxplus.places"
     compileSdk = Versions.compileSdkVersion
 
     defaultConfig {
