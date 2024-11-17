@@ -28,7 +28,7 @@ import com.afoxplus.uikit.views.status.ListSuccess
 fun EstablishmentsComponent(
     modifier: Modifier = Modifier,
     establishmentState: State<ListState<Establishment>> = mutableStateOf(ListEmptyData()),
-    onEstablishmentClick: (Establishment) -> Unit = {}
+    onEstablishmentClick: (Int) -> Unit = {}
 ) {
     when (establishmentState.value) {
         is ListSuccess<Establishment> -> {
@@ -51,7 +51,7 @@ fun EstablishmentsComponent(
                             .wrapContentSize(),
                         establishment = establishment
                     ) {
-                        onEstablishmentClick(establishment)
+                        onEstablishmentClick(page)
                     }
                 }
             }
