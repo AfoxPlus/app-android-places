@@ -8,6 +8,7 @@ plugins {
     id("org.jetbrains.kotlin.plugin.parcelize")
     id("org.sonarqube") version "3.3"
     id("jacoco")
+    id("kotlin-parcelize")
 }
 
 apply {

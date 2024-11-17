@@ -28,17 +28,21 @@ class AutocompleteViewModel @Inject constructor(
     }
     val establishments: StateFlow<ListState<Establishment>> get() = mEstablishments
 
+    private val mResults = mutableListOf<com.afoxplus.places.domain.entities.Establishment>()
+
     fun searchEstablishments(query: String) =
         viewModelScope.launch(uiKitCoroutineDispatcher.getIODispatcher()) {
             try {
                 mEstablishments.value = ListLoading()
                 val results = fetchEstablishmentByQuery.invoke(query)
+                mResults.clear()
+                mResults.addAll(results)
                 mEstablishments.value = ListSuccess(results.map {
                     Establishment(
                         imageLandscape = it.imageBanner,
                         imagePortrait = it.imageLogo,
                         name = it.name,
-                        description = it.description,
+                        description = it.primaryType,
                         hasSubscription = it.hasSubscription,
                         isOpen = it.isOpen,
                         rating = it.rating,
@@ -49,6 +53,12 @@ class AutocompleteViewModel @Inject constructor(
             } catch (ex: Exception) {
                 mEstablishments.value = ListError(ex)
             }
-
         }
+
+    fun selectEstablishment(
+        index: Int,
+        onReturnToMap: (com.afoxplus.places.domain.entities.Establishment) -> Unit
+    ) {
+        onReturnToMap(mResults[index])
+    }
 }

@@ -33,8 +33,8 @@ class MapViewModel @Inject constructor(
     }
     val chips: StateFlow<ListState<ChipItem>> get() = mChips
 
-    private val mCurrentPosition: MutableStateFlow<Location?> = MutableStateFlow(null)
-    val currentPosition: StateFlow<Location?> get() = mCurrentPosition
+    private val mLastKnownLocation: MutableStateFlow<Location?> = MutableStateFlow(null)
+    val lastKnownLocation: StateFlow<Location?> get() = mLastKnownLocation
 
     private val mEstablishments: MutableStateFlow<ListState<Establishment>> by lazy {
         MutableStateFlow(
@@ -53,7 +53,7 @@ class MapViewModel @Inject constructor(
         fetchChips()
     }
 
-    fun fetchChips() = viewModelScope.launch(uiKitCoroutineDispatcher.getIODispatcher()) {
+    private fun fetchChips() = viewModelScope.launch(uiKitCoroutineDispatcher.getIODispatcher()) {
         try {
             mChips.value = ListLoading()
             val results = fetchCategories.invoke()
@@ -63,19 +63,15 @@ class MapViewModel @Inject constructor(
         }
     }
 
-    fun fetchEstablishments() =
+    private fun fetchEstablishments(location: com.afoxplus.places.domain.entities.Location) =
         viewModelScope.launch(uiKitCoroutineDispatcher.getIODispatcher()) {
             try {
                 mEstablishments.value = ListLoading()
                 mMarkers.value = listOf()
                 val results = fetchEstablishments.invoke(
                     selectedTypes,
-                    currentPosition.value?.let {
-                        com.afoxplus.places.domain.entities.Location(
-                            it.latitude,
-                            it.longitude
-                        )
-                    })
+                    location
+                )
                 mEstablishments.value = ListSuccess(results.map {
                     Establishment(
                         imageLandscape = it.imageBanner,
@@ -96,18 +92,38 @@ class MapViewModel @Inject constructor(
             }
         }
 
-    fun setLocation(location: Location?) {
-        mCurrentPosition.value = location
-        fetchEstablishments()
+    fun setMapCurrentLocation(location: Location?) {
+        if (location != lastKnownLocation.value) {
+            mLastKnownLocation.value = location
+            location?.let {
+                fetchEstablishments(
+                    com.afoxplus.places.domain.entities.Location(
+                        it.latitude,
+                        it.longitude
+                    )
+                )
+            }
+        }
     }
 
     fun selectedChips(chipItems: List<ChipItem>) {
         selectedTypes.clear()
         selectedTypes.addAll(chipItems.map { it.name })
-        fetchEstablishments()
+        mLastKnownLocation.value?.let {
+            fetchEstablishments(
+                com.afoxplus.places.domain.entities.Location(
+                    it.latitude,
+                    it.longitude
+                )
+            )
+        }
     }
 
     fun onEstablishmentClick(establishment: Establishment) {
 
+    }
+
+    fun handleResultEstablishment(location: com.afoxplus.places.domain.entities.Location) {
+        fetchEstablishments(location)
     }
 }

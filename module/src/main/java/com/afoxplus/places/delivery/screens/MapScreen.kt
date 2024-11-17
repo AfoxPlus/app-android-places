@@ -5,14 +5,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.compose.rememberNavController
+import androidx.navigation.NavHostController
 import com.afoxplus.places.delivery.components.ChipsComponent
 import com.afoxplus.places.delivery.components.EstablishmentsComponent
 import com.afoxplus.places.delivery.components.LocationButton
@@ -20,6 +20,7 @@ import com.afoxplus.places.delivery.utils.askForLocationPermission
 import com.afoxplus.places.delivery.utils.getCurrentLocation
 import com.afoxplus.places.delivery.utils.hasLocationPermission
 import com.afoxplus.places.delivery.viewmodels.MapViewModel
+import com.afoxplus.places.domain.entities.Location
 import com.afoxplus.uikit.designsystem.businesscomponents.UIKitMapSearch
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
@@ -29,15 +30,20 @@ import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 
+
 @Composable
 fun MapScreen(
     modifier: Modifier = Modifier,
-    activity: Activity
+    activity: Activity,
+    navController: NavHostController,
+    onNavigateToAutocomplete: () -> Unit,
 ) {
     MapScreen(
         modifier = modifier,
         activity = activity,
-        mapViewModel = hiltViewModel()
+        mapViewModel = hiltViewModel(),
+        navController = navController,
+        onNavigateToAutocomplete = onNavigateToAutocomplete
     )
 }
 
@@ -45,25 +51,37 @@ fun MapScreen(
 internal fun MapScreen(
     modifier: Modifier = Modifier,
     activity: Activity,
-    mapViewModel: MapViewModel
+    mapViewModel: MapViewModel,
+    navController: NavHostController,
+    onNavigateToAutocomplete: () -> Unit,
 ) {
     val cameraPositionState = rememberCameraPositionState()
-    val currentPositionState = mapViewModel.currentPosition.collectAsState()
     val chips = mapViewModel.chips.collectAsStateWithLifecycle()
     val establishmentState = mapViewModel.establishments.collectAsStateWithLifecycle()
-    val markers = mapViewModel.markers.collectAsState()
+    val markers = mapViewModel.markers.collectAsStateWithLifecycle()
+    val savedStateHandle = navController.currentBackStackEntry?.savedStateHandle
+    val establishmentResult =
+        savedStateHandle?.getStateFlow<Location?>("location_result", null)
+            ?.collectAsStateWithLifecycle()
 
-    val navController = rememberNavController()
+    val currentLocationState = mapViewModel.lastKnownLocation.collectAsStateWithLifecycle()
 
-    activity.getCurrentLocation { location ->
-        mapViewModel.setLocation(location)
+    LaunchedEffect(key1 = Unit) {
+        activity.getCurrentLocation { location ->
+            mapViewModel.setMapCurrentLocation(location)
+        }
+    }
+
+    LaunchedEffect(key1 = Unit) {
+        establishmentResult?.value?.let {
+            mapViewModel.handleResultEstablishment(it)
+        }
     }
 
     ConstraintLayout(
         modifier = modifier.fillMaxSize()
     ) {
         val (map, searchBar, chipsRow, establishmentsCard, locationButton) = createRefs()
-
         GoogleMap(
             modifier = Modifier
                 .fillMaxSize()
@@ -102,7 +120,9 @@ internal fun MapScreen(
                     width = Dimension.fillToConstraints
                 },
             placeholderText = "Buscar más aquí"
-        )
+        ) {
+            onNavigateToAutocomplete()
+        }
 
         ChipsComponent(
             modifier = Modifier.constrainAs(chipsRow) {
@@ -133,8 +153,12 @@ internal fun MapScreen(
         LocationButton(
             onClick = {
                 if (activity.hasLocationPermission()) {
-                    currentPositionState.value?.let {
-                        val userLocation = LatLng(it.latitude, it.longitude)
+                    currentLocationState.value?.let { currentLocation ->
+                        val userLocation = LatLng(
+                            currentLocation.latitude,
+                            currentLocation.longitude
+                        )
+                        mapViewModel.setMapCurrentLocation(currentLocation)
                         cameraPositionState.position =
                             CameraPosition.fromLatLngZoom(userLocation, 15f)
                     }
@@ -150,4 +174,3 @@ internal fun MapScreen(
         )
     }
 }
-

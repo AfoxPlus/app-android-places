@@ -16,11 +16,10 @@ internal class EstablishmentNetworkService
         location: Location?,
         types: List<String>
     ): List<Establishment> {
-        val response = api.fetchEstablishments(
-            FilterRequest(
-                types,
-                location?.let { listOf(it.latitude, it.longitude) } ?: listOf()))
-
+        val request = FilterRequest(
+            types,
+            location?.let { listOf(it.latitude, it.longitude) } ?: listOf())
+        val response = api.fetchEstablishments(request)
         return response.body()?.payload?.map { it.toDomain() } ?: emptyList()
     }
 

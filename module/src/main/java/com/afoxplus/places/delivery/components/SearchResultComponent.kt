@@ -7,6 +7,7 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import com.afoxplus.uikit.designsystem.businesscomponents.UIKitItemAutocomplete
+import com.afoxplus.uikit.designsystem.businesscomponents.UIKitItemAutocompleteShimmer
 import com.afoxplus.uikit.designsystem.foundations.UIKitTheme
 import com.afoxplus.uikit.objects.vendor.Establishment
 import com.afoxplus.uikit.views.status.ListEmptyData
@@ -19,7 +20,7 @@ import com.afoxplus.uikit.views.status.ListSuccess
 fun SearchResultComponent(
     modifier: Modifier = Modifier,
     establishmentState: State<ListState<Establishment>> = mutableStateOf(ListEmptyData()),
-    onEstablishmentClick: (Establishment) -> Unit = {}
+    onEstablishmentClick: (Int) -> Unit = {}
 ) {
     when (establishmentState.value) {
         is ListSuccess<Establishment> -> {
@@ -32,14 +33,21 @@ fun SearchResultComponent(
                     UIKitItemAutocomplete(
                         establishment = establishments[item]
                     ) {
-                        onEstablishmentClick(establishments[item])
+                        onEstablishmentClick(item)
                     }
                 }
             }
         }
 
         is ListLoading<Establishment> -> {
-
+            LazyColumn(
+                modifier = modifier
+                    .background(UIKitTheme.colors.light01)
+            ) {
+                items(4) {
+                    UIKitItemAutocompleteShimmer()
+                }
+            }
         }
 
         is ListError<Establishment> -> {

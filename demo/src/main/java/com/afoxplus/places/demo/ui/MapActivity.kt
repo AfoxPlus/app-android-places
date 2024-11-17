@@ -9,9 +9,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
-import com.afoxplus.places.delivery.screens.AutocompleteScreen
-import com.afoxplus.places.delivery.screens.MapScreen
-import com.afoxplus.places.delivery.screens.AutocompleteScreen
+import androidx.navigation.compose.rememberNavController
+import com.afoxplus.places.delivery.graphs.AppNavGraph
 import com.afoxplus.uikit.designsystem.foundations.UIKitTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -29,8 +28,7 @@ class MapActivity : ComponentActivity() {
                             .padding(paddingValues = paddingValues)
                             .fillMaxSize()
                     ) {
-                        //MapScreen(activity = this@MapActivity)
-                        AutocompleteScreen()
+                        AppNavGraph(activity = this@MapActivity, rememberNavController())
                     }
                 }
             }

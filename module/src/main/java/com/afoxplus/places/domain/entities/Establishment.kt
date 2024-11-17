@@ -1,5 +1,9 @@
 package com.afoxplus.places.domain.entities
 
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
+
+@Parcelize
 data class Establishment(
     val id: String,
     val name: String,
@@ -23,4 +27,4 @@ data class Establishment(
     val country: String,
     val location: Location,
     val types: List<String>
-)
+) : Parcelable
