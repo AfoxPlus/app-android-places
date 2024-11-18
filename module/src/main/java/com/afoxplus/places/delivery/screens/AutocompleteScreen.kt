@@ -44,7 +44,7 @@ internal fun AutocompleteScreen(
     navController: NavHostController,
     onReturnToMap: (com.afoxplus.places.domain.entities.Establishment) -> Unit
 ) {
-    val establishmentState = viewModel.establishments.collectAsStateWithLifecycle()
+    val establishmentState = viewModel.predictionsResult.collectAsStateWithLifecycle()
     val focusRequester = remember { FocusRequester() }
 
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -84,8 +84,12 @@ internal fun AutocompleteScreen(
             onBackClick = {
                 navController.popBackStack()
             }, onTextChange = {
-                viewModel.searchEstablishments(it)
-            })
+                viewModel.onSearchTextChanged(it)
+            },
+            onTextClear = {
+                viewModel.onSearchTextChanged("")
+            }
+        )
         Box(
             modifier = Modifier
                 .constrainAs(listResults) {

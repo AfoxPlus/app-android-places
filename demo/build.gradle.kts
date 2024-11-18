@@ -121,6 +121,11 @@ dependencies {
     implementation(Deps.UI.glide)
     kapt(Deps.UI.glideCompiler)
 
+    //Map
+    implementation(Deps.Arch.map)
+    implementation(Deps.Arch.mapCompose)
+    implementation(Deps.Arch.mapLocation)
+
     // Coroutines
     implementation(Deps.Arch.coroutinesCore)
     implementation(Deps.Arch.coroutinesAndroid)
