@@ -22,6 +22,9 @@ import com.afoxplus.places.delivery.utils.hasLocationPermission
 import com.afoxplus.places.delivery.viewmodels.MapViewModel
 import com.afoxplus.places.domain.entities.Location
 import com.afoxplus.uikit.designsystem.businesscomponents.UIKitMapSearch
+import com.afoxplus.uikit.designsystem.extensions.getBitmapFromVectorDrawable
+import com.afoxplus.uikit.designsystem.foundations.UIKitTheme
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.GoogleMap
@@ -58,7 +61,7 @@ internal fun MapScreen(
     val cameraPositionState = rememberCameraPositionState()
     val chips = mapViewModel.chips.collectAsStateWithLifecycle()
     val establishmentState = mapViewModel.establishments.collectAsStateWithLifecycle()
-    val markers = mapViewModel.establishmentsResults.collectAsStateWithLifecycle()
+    val markers = mapViewModel.establishmentsVOs.collectAsStateWithLifecycle()
     val savedStateHandle = navController.currentBackStackEntry?.savedStateHandle
     val establishmentResult =
         savedStateHandle?.getStateFlow<Location?>("location_result", null)
@@ -69,6 +72,13 @@ internal fun MapScreen(
     LaunchedEffect(key1 = Unit) {
         activity.getCurrentLocation { location ->
             mapViewModel.setMapCurrentLocation(location)
+            location?.let {
+                cameraPositionState.position =
+                    CameraPosition.fromLatLngZoom(
+                        LatLng(location.latitude, location.longitude),
+                        15f
+                    )
+            }
         }
     }
 
@@ -98,15 +108,23 @@ internal fun MapScreen(
             )
         ) {
             markers.value.forEach {
+                val icon = if (it.isSelected) {
+                    UIKitTheme.icons.icon_location_filled
+                } else {
+                    UIKitTheme.icons.icon_location_filled_red
+                }
+                val customPinBitmap =
+                    icon.getBitmapFromVectorDrawable(activity.baseContext)
                 Marker(
                     state = MarkerState(
                         position = LatLng(
-                            it.location.latitude,
-                            it.location.latitude
+                            it.establishment.location.latitude,
+                            it.establishment.location.longitude
                         )
                     ),
-                    title = it.name,
-                    snippet = it.address
+                    title = it.establishment.name,
+                    snippet = it.establishment.address,
+                    icon = BitmapDescriptorFactory.fromBitmap(customPinBitmap)
                 )
             }
         }
@@ -144,7 +162,10 @@ internal fun MapScreen(
         }) {
             EstablishmentsComponent(
                 establishmentState = establishmentState,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                onPageSelectedListener = {
+                    mapViewModel.selectedEstablishmentPage(index = it)
+                }
             ) { index ->
                 mapViewModel.onEstablishmentClick(index)
             }

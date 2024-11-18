@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
@@ -28,12 +29,16 @@ import com.afoxplus.uikit.views.status.ListSuccess
 fun EstablishmentsComponent(
     modifier: Modifier = Modifier,
     establishmentState: State<ListState<Establishment>> = mutableStateOf(ListEmptyData()),
+    onPageSelectedListener: (Int) -> Unit = {},
     onEstablishmentClick: (Int) -> Unit = {}
 ) {
     when (establishmentState.value) {
         is ListSuccess<Establishment> -> {
             val establishments = (establishmentState.value as ListSuccess<Establishment>).data
             val pagerState = rememberPagerState(pageCount = { establishments.size })
+            LaunchedEffect(pagerState.currentPage) {
+                onPageSelectedListener(pagerState.currentPage)
+            }
             HorizontalPager(
                 state = pagerState,
                 modifier = modifier.fillMaxWidth(),

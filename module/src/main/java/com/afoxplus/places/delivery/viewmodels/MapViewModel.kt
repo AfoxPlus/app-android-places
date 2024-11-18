@@ -4,6 +4,7 @@ import android.location.Location
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.afoxplus.places.delivery.events.OnClickEstablishmentEvent
+import com.afoxplus.places.delivery.viewobjects.EstablishmentVO
 import com.afoxplus.places.domain.usecases.actions.FetchEstablishmentTypes
 import com.afoxplus.places.domain.usecases.actions.FetchEstablishments
 import com.afoxplus.uikit.bus.UIKitEventBusWrapper
@@ -46,11 +47,13 @@ class MapViewModel @Inject constructor(
     }
     val establishments: StateFlow<ListState<Establishment>> get() = mEstablishments
 
-    private val mEstablishmentResults: MutableStateFlow<List<com.afoxplus.places.domain.entities.Establishment>> =
+    private val mEstablishmentVOs: MutableStateFlow<List<EstablishmentVO>> =
         MutableStateFlow(listOf())
-    val establishmentsResults: StateFlow<List<com.afoxplus.places.domain.entities.Establishment>> get() = mEstablishmentResults
+    val establishmentsVOs: StateFlow<List<EstablishmentVO>> get() = mEstablishmentVOs
 
     private val selectedTypes: MutableList<String> = mutableListOf()
+    private val establishmentResult: MutableList<com.afoxplus.places.domain.entities.Establishment> =
+        mutableListOf()
 
     init {
         fetchChips()
@@ -70,7 +73,7 @@ class MapViewModel @Inject constructor(
         viewModelScope.launch(uiKitCoroutineDispatcher.getIODispatcher()) {
             try {
                 mEstablishments.value = ListLoading()
-                mEstablishmentResults.value = listOf()
+                mEstablishmentVOs.value = listOf()
                 val results = fetchEstablishments.invoke(
                     selectedTypes,
                     location
@@ -88,12 +91,24 @@ class MapViewModel @Inject constructor(
                         phoneDescription = it.phone
                     )
                 })
-                mEstablishmentResults.value = results
+                establishmentResult.clear()
+                establishmentResult.addAll(results)
+                mapEstablishmentVO(results, 0)
+
             } catch (ex: Exception) {
-                mEstablishmentResults.value = listOf()
+                mEstablishmentVOs.value = listOf()
                 mEstablishments.value = ListError(ex)
             }
         }
+
+    private fun mapEstablishmentVO(
+        list: List<com.afoxplus.places.domain.entities.Establishment>,
+        selectedIndex: Int
+    ) {
+        val establishmentVOs = list.map { EstablishmentVO(false, it) }
+        establishmentVOs[selectedIndex].isSelected = true
+        mEstablishmentVOs.value = establishmentVOs
+    }
 
     fun setMapCurrentLocation(location: Location?) {
         if (location != lastKnownLocation.value) {
@@ -124,11 +139,15 @@ class MapViewModel @Inject constructor(
 
     fun onEstablishmentClick(index: Int) {
         viewModelScope.launch(uiKitCoroutineDispatcher.getMainDispatcher()) {
-            eventBusWrapper.send(OnClickEstablishmentEvent(mEstablishmentResults.value[index]))
+            eventBusWrapper.send(OnClickEstablishmentEvent(establishmentResult[index]))
         }
     }
 
     fun handleResultEstablishment(location: com.afoxplus.places.domain.entities.Location) {
         fetchEstablishments(location)
+    }
+
+    fun selectedEstablishmentPage(index: Int) {
+        mapEstablishmentVO(establishmentResult, index)
     }
 }
