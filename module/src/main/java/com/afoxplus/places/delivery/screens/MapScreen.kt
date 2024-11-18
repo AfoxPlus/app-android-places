@@ -58,7 +58,7 @@ internal fun MapScreen(
     val cameraPositionState = rememberCameraPositionState()
     val chips = mapViewModel.chips.collectAsStateWithLifecycle()
     val establishmentState = mapViewModel.establishments.collectAsStateWithLifecycle()
-    val markers = mapViewModel.markers.collectAsStateWithLifecycle()
+    val markers = mapViewModel.establishmentsResults.collectAsStateWithLifecycle()
     val savedStateHandle = navController.currentBackStackEntry?.savedStateHandle
     val establishmentResult =
         savedStateHandle?.getStateFlow<Location?>("location_result", null)
@@ -145,8 +145,8 @@ internal fun MapScreen(
             EstablishmentsComponent(
                 establishmentState = establishmentState,
                 modifier = Modifier.fillMaxWidth()
-            ) { establishment ->
-                mapViewModel.onEstablishmentClick(establishment)
+            ) { index ->
+                mapViewModel.onEstablishmentClick(index)
             }
         }
 
