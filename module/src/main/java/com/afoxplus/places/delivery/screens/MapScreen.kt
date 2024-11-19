@@ -33,7 +33,6 @@ import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 
-
 @Composable
 fun MapScreen(
     modifier: Modifier = Modifier,
@@ -59,7 +58,7 @@ internal fun MapScreen(
     onNavigateToAutocomplete: () -> Unit,
 ) {
     val cameraPositionState = rememberCameraPositionState()
-    val chips = mapViewModel.chips.collectAsStateWithLifecycle()
+    val chipsState = mapViewModel.chips.collectAsStateWithLifecycle()
     val establishmentState = mapViewModel.establishments.collectAsStateWithLifecycle()
     val markers = mapViewModel.establishmentsVOs.collectAsStateWithLifecycle()
     val savedStateHandle = navController.currentBackStackEntry?.savedStateHandle
@@ -149,7 +148,7 @@ internal fun MapScreen(
                 end.linkTo(parent.end)
                 width = Dimension.fillToConstraints
             },
-            chipState = chips
+            chipState = chipsState
         ) { selectedChips ->
             mapViewModel.selectedChips(selectedChips)
         }

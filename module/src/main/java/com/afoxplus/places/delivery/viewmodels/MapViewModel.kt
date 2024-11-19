@@ -55,6 +55,8 @@ class MapViewModel @Inject constructor(
     private val establishmentResult: MutableList<com.afoxplus.places.domain.entities.Establishment> =
         mutableListOf()
 
+    private val chipsResults: MutableList<String> = mutableListOf()
+
     init {
         fetchChips()
     }
@@ -63,7 +65,9 @@ class MapViewModel @Inject constructor(
         try {
             mChips.value = ListLoading()
             val results = fetchCategories.invoke()
-            mChips.value = ListSuccess(results.map { ChipItem("", false, it) })
+            chipsResults.clear()
+            chipsResults.addAll(results)
+            mChips.value = ListSuccess(results.map { ChipItem(it, false) })
         } catch (ex: Exception) {
             mChips.value = ListError(ex)
         }
@@ -111,7 +115,7 @@ class MapViewModel @Inject constructor(
     }
 
     fun setMapCurrentLocation(location: Location?) {
-        if (location != lastKnownLocation.value) {
+        if (location?.latitude != lastKnownLocation.value?.latitude && location?.longitude != lastKnownLocation.value?.longitude) {
             mLastKnownLocation.value = location
             location?.let {
                 fetchEstablishments(
@@ -127,6 +131,7 @@ class MapViewModel @Inject constructor(
     fun selectedChips(chipItems: List<ChipItem>) {
         selectedTypes.clear()
         selectedTypes.addAll(chipItems.map { it.name })
+        mapSelectedChips(chipItems.map { it.name })
         mLastKnownLocation.value?.let {
             fetchEstablishments(
                 com.afoxplus.places.domain.entities.Location(
@@ -144,10 +149,24 @@ class MapViewModel @Inject constructor(
     }
 
     fun handleResultEstablishment(location: com.afoxplus.places.domain.entities.Location) {
+        mapSelectedChips(emptyList())
         fetchEstablishments(location)
     }
 
     fun selectedEstablishmentPage(index: Int) {
         mapEstablishmentVO(establishmentResult, index)
+    }
+
+    private fun mapSelectedChips(selectedChips: List<String>) {
+        viewModelScope.launch(uiKitCoroutineDispatcher.getIODispatcher()) {
+            mChips.value = ListLoading()
+            selectedTypes.clear()
+            selectedTypes.addAll(selectedChips)
+            mChips.value =
+                ListSuccess(chipsResults.map {
+                    val isSelected = selectedChips.contains(it)
+                    ChipItem(it, isSelected)
+                })
+        }
     }
 }
