@@ -21,6 +21,7 @@ import com.afoxplus.places.delivery.utils.getCurrentLocation
 import com.afoxplus.places.delivery.utils.hasLocationPermission
 import com.afoxplus.places.delivery.viewmodels.MapViewModel
 import com.afoxplus.places.domain.entities.Location
+import com.afoxplus.uikit.designsystem.atoms.UIKitBackButton
 import com.afoxplus.uikit.designsystem.businesscomponents.UIKitMapSearch
 import com.afoxplus.uikit.designsystem.extensions.getBitmapFromVectorDrawable
 import com.afoxplus.uikit.designsystem.foundations.UIKitTheme
@@ -32,6 +33,7 @@ import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
+import kotlinx.coroutines.flow.collectLatest
 
 @Composable
 fun MapScreen(
@@ -39,13 +41,15 @@ fun MapScreen(
     activity: Activity,
     navController: NavHostController,
     onNavigateToAutocomplete: () -> Unit,
+    onBackClick: () -> Unit
 ) {
     MapScreen(
         modifier = modifier,
         activity = activity,
         mapViewModel = hiltViewModel(),
         navController = navController,
-        onNavigateToAutocomplete = onNavigateToAutocomplete
+        onNavigateToAutocomplete = onNavigateToAutocomplete,
+        onBackClick = onBackClick
     )
 }
 
@@ -56,6 +60,7 @@ internal fun MapScreen(
     mapViewModel: MapViewModel,
     navController: NavHostController,
     onNavigateToAutocomplete: () -> Unit,
+    onBackClick: () -> Unit
 ) {
     val cameraPositionState = rememberCameraPositionState()
     val chipsState = mapViewModel.chips.collectAsStateWithLifecycle()
@@ -67,6 +72,21 @@ internal fun MapScreen(
             ?.collectAsStateWithLifecycle()
 
     val currentLocationState = mapViewModel.lastKnownLocation.collectAsStateWithLifecycle()
+
+    LaunchedEffect(key1 = Unit) {
+        mapViewModel.establishmentsVOs.collectLatest {
+            it.find { item -> item.isSelected }?.let { item ->
+                cameraPositionState.position =
+                    CameraPosition.fromLatLngZoom(
+                        LatLng(
+                            item.establishment.location.latitude,
+                            item.establishment.location.longitude
+                        ),
+                        20f
+                    )
+            }
+        }
+    }
 
     LaunchedEffect(key1 = Unit) {
         activity.getCurrentLocation { location ->
@@ -90,7 +110,7 @@ internal fun MapScreen(
     ConstraintLayout(
         modifier = modifier.fillMaxSize()
     ) {
-        val (map, searchBar, chipsRow, establishmentsCard, locationButton) = createRefs()
+        val (map, searchBar, chipsRow, establishmentsCard, locationButton, buttonBack) = createRefs()
         GoogleMap(
             modifier = Modifier
                 .fillMaxSize()
@@ -103,7 +123,9 @@ internal fun MapScreen(
             cameraPositionState = cameraPositionState,
             uiSettings = MapUiSettings(
                 zoomControlsEnabled = false,
-                compassEnabled = false
+                compassEnabled = false,
+                mapToolbarEnabled = false
+
             )
         ) {
             markers.value.forEach {
@@ -128,11 +150,18 @@ internal fun MapScreen(
             }
         }
 
+        UIKitBackButton(modifier = Modifier.constrainAs(buttonBack) {
+            start.linkTo(parent.start, margin = 16.dp)
+            top.linkTo(parent.top, margin = 16.dp)
+
+        }, onClick = onBackClick)
+
         UIKitMapSearch(
             modifier = Modifier
                 .constrainAs(searchBar) {
-                    top.linkTo(parent.top, margin = 16.dp)
-                    start.linkTo(parent.start, margin = 16.dp)
+                    top.linkTo(buttonBack.top)
+                    bottom.linkTo(buttonBack.bottom)
+                    start.linkTo(buttonBack.end, margin = 10.dp)
                     end.linkTo(parent.end, margin = 16.dp)
                     width = Dimension.fillToConstraints
                 },

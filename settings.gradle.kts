@@ -39,6 +39,6 @@ buildscript {
 include(":demo")
 include(":module")
 
-
+/*
 include("uikit")
-project(":uikit").projectDir = File("${settings.rootProject.projectDir.parent}/app-android-uikit/module")
+project(":uikit").projectDir = File("${settings.rootProject.projectDir.parent}/app-android-uikit/module")*/

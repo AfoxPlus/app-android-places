@@ -7,7 +7,7 @@ plugins {
     id("org.jetbrains.kotlin.plugin.parcelize") version "1.7.20" apply false
 }
 
-allprojects {
+/*allprojects {
     configurations.all {
         resolutionStrategy {
             dependencySubstitution {
@@ -16,3 +16,4 @@ allprojects {
         }
     }
 }
+*/

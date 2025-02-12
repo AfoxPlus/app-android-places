@@ -34,8 +34,6 @@ internal fun Activity.askForLocationPermission() {
 internal fun Activity.getCurrentLocation(onLocationReceived: (Location?) -> Unit) {
     val fusedLocationClient: FusedLocationProviderClient =
         LocationServices.getFusedLocationProviderClient(this)
-
-    // Check if permission is granted
     if (ActivityCompat.checkSelfPermission(
             this,
             Manifest.permission.ACCESS_FINE_LOCATION
@@ -45,29 +43,24 @@ internal fun Activity.getCurrentLocation(onLocationReceived: (Location?) -> Unit
             Manifest.permission.ACCESS_COARSE_LOCATION
         ) != PackageManager.PERMISSION_GRANTED
     ) {
-        // Request permissions if not granted
         ActivityCompat.requestPermissions(
             this,
             arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
             LOCATION_PERMISSION_REQUEST_CODE
         )
-        onLocationReceived(null) // Return null if permission isn't granted
+        onLocationReceived(null)
         return
     }
 
-    // Get the last known location
     fusedLocationClient.lastLocation
         .addOnSuccessListener { location: Location? ->
             if (location != null) {
-                // Location is received, pass it to the callback
                 onLocationReceived(location)
             } else {
-                // No location was retrieved
                 onLocationReceived(null)
             }
         }
-        .addOnFailureListener { e ->
-            Log.e("LocationError", "Failed to get location: ${e.message}")
+        .addOnFailureListener { _ ->
             onLocationReceived(null)
         }
 }

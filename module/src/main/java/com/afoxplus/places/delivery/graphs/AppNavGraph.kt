@@ -9,12 +9,17 @@ import com.afoxplus.places.delivery.screens.AutocompleteScreen
 import com.afoxplus.places.delivery.screens.MapScreen
 
 @Composable
-fun AppNavGraph(activity: Activity, navController: NavHostController) {
+fun AppNavGraph(activity: Activity, navController: NavHostController, onBackClick: () -> Unit) {
     NavHost(navController = navController, startDestination = Graph.Map.route) {
         composable(route = Graph.Map.route) {
-            MapScreen(activity = activity, navController = navController) {
-                navController.navigate(Graph.Autocomplete.route)
-            }
+            MapScreen(
+                activity = activity,
+                navController = navController,
+                onBackClick = onBackClick,
+                onNavigateToAutocomplete = {
+                    navController.navigate(Graph.Autocomplete.route)
+                }
+            )
         }
         composable(route = Graph.Autocomplete.route) {
             AutocompleteScreen(navController = navController) { establishment ->
