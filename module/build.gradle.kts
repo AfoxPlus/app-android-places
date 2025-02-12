@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     id("com.android.library")
     id("org.jetbrains.kotlin.android")
@@ -6,6 +8,7 @@ plugins {
     id("org.jetbrains.kotlin.plugin.parcelize")
     id("org.sonarqube") version "3.3"
     id("jacoco")
+    id("kotlin-parcelize")
 }
 
 apply {
@@ -15,8 +18,16 @@ apply {
     from("graph.gradle.kts")
 }
 
+val localProperties = rootProject.file("local.properties")
+val properties = Properties()
+if (localProperties.exists()) {
+    properties.load(localProperties.inputStream())
+}
+
+val googleMapsApiKey: String = properties.getProperty("GOOGLE_MAPS_API_KEY") ?: ""
+
 android {
-    namespace = "com.afoxplus.module"
+    namespace = "com.afoxplus.places"
     compileSdk = Versions.compileSdkVersion
 
     defaultConfig {
@@ -28,6 +39,14 @@ android {
     }
 
     buildTypes {
+        getByName("debug") {
+            buildConfigField("String", "GOOGLE_MAPS_API_KEY", "\"$googleMapsApiKey\"")
+            resValue("string", "GOOGLE_MAPS_API_KEY", googleMapsApiKey)
+        }
+        getByName("release") {
+            buildConfigField("String", "GOOGLE_MAPS_API_KEY", "\"$googleMapsApiKey\"")
+            resValue("string", "GOOGLE_MAPS_API_KEY", googleMapsApiKey)
+        }
         getByName("release") {
             isMinifyEnabled = false
             proguardFiles(
@@ -63,6 +82,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     composeOptions {
@@ -123,6 +143,11 @@ dependencies {
     implementation(Deps.JetpackCompose.coilCompose)
     implementation(Deps.UI.glide)
     kapt(Deps.UI.glideCompiler)
+
+    //Map
+    implementation(Deps.Arch.map)
+    implementation(Deps.Arch.mapCompose)
+    implementation(Deps.Arch.mapLocation)
 
     // Coroutines
     implementation(Deps.Arch.coroutinesCore)

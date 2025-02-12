@@ -9,7 +9,7 @@ plugins {
 }
 
 android {
-    namespace = "com.afoxplus.module.demo"
+    namespace = "com.afoxplus.places.demo"
     compileSdk = Versions.compileSdkVersion
 
     defaultConfig {
@@ -120,6 +120,11 @@ dependencies {
     implementation(Deps.JetpackCompose.coilCompose)
     implementation(Deps.UI.glide)
     kapt(Deps.UI.glideCompiler)
+
+    //Map
+    implementation(Deps.Arch.map)
+    implementation(Deps.Arch.mapCompose)
+    implementation(Deps.Arch.mapLocation)
 
     // Coroutines
     implementation(Deps.Arch.coroutinesCore)

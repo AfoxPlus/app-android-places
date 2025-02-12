@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.afoxplus.module.demo">
+    package="com.afoxplus.places.demo">
 
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
@@ -15,6 +15,12 @@
         <activity
             android:name=".ui.MainActivity"
             android:exported="true"
+            android:theme="@style/UIKit.NoActionBar.Light"
+            android:windowSoftInputMode="adjustResize" />
+
+        <activity
+            android:name=".ui.MapActivity"
+            android:exported="true"
             android:theme="@style/UIKit.NoActionBar.Light" />
 
         <activity
@@ -27,5 +33,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyCMZFfeji6cTx1bn2tTVqAcq07Bbh2pEb0" />
+
     </application>
 </manifest>
