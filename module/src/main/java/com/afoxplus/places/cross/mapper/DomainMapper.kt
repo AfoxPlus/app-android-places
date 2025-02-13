@@ -7,6 +7,7 @@ internal fun Establishment.toUIEstablishment(): UIEstablishment {
     return UIEstablishment(
         imageLandscape = this.imageBanner,
         imagePortrait = this.imageLogo,
+        primaryType = this.primaryType,
         name = this.name,
         description = this.primaryType,
         hasSubscription = this.hasSubscription,

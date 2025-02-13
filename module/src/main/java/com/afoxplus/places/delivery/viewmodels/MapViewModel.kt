@@ -1,6 +1,5 @@
 package com.afoxplus.places.delivery.viewmodels
 
-import android.location.Location
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.afoxplus.places.delivery.events.OnClickEstablishmentEvent
@@ -16,9 +15,15 @@ import com.afoxplus.uikit.views.status.ListError
 import com.afoxplus.uikit.views.status.ListLoading
 import com.afoxplus.uikit.views.status.ListState
 import com.afoxplus.uikit.views.status.ListSuccess
+import com.google.android.gms.maps.model.LatLng
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import com.afoxplus.places.domain.entities.Location as PlaceLocation
+import com.afoxplus.places.domain.entities.Establishment as PlaceEstablishment
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -30,32 +35,30 @@ class MapViewModel @Inject constructor(
     private val eventBusWrapper: UIKitEventBusWrapper
 ) : ViewModel() {
 
+    private val mLastKnownLocation: MutableStateFlow<PlaceLocation> =
+        MutableStateFlow(DEFAULT_COORDINATES)
+
     private val mChips: MutableStateFlow<ListState<ChipItem>> by lazy {
-        MutableStateFlow(
-            ListEmptyData()
-        )
+        MutableStateFlow(ListEmptyData())
     }
-    val chips: StateFlow<ListState<ChipItem>> get() = mChips
+    val chips = mChips.asStateFlow()
 
-    private val mLastKnownLocation: MutableStateFlow<Location?> = MutableStateFlow(null)
-    val lastKnownLocation: StateFlow<Location?> get() = mLastKnownLocation
-
-    private val mEstablishments: MutableStateFlow<ListState<Establishment>> by lazy {
-        MutableStateFlow(
-            ListEmptyData()
-        )
+    private val mEstablishmentsState: MutableStateFlow<ListState<Establishment>> by lazy {
+        MutableStateFlow(ListEmptyData())
     }
-    val establishments: StateFlow<ListState<Establishment>> get() = mEstablishments
+    val establishmentState = mEstablishmentsState.asStateFlow()
 
-    private val mEstablishmentVOs: MutableStateFlow<List<EstablishmentVO>> =
+    private val mEstablishmentMarkers: MutableStateFlow<List<EstablishmentVO>> =
         MutableStateFlow(listOf())
-    val establishmentsVOs: StateFlow<List<EstablishmentVO>> get() = mEstablishmentVOs
+    val establishmentMarkers: StateFlow<List<EstablishmentVO>> get() = mEstablishmentMarkers
 
     private val selectedTypes: MutableList<String> = mutableListOf()
-    private val establishmentResult: MutableList<com.afoxplus.places.domain.entities.Establishment> =
-        mutableListOf()
+    private val establishmentResult: MutableList<PlaceEstablishment> = mutableListOf()
 
     private val chipsResults: MutableList<String> = mutableListOf()
+
+    private val mCameraPositionState: MutableSharedFlow<PlaceLocation> by lazy { MutableSharedFlow() }
+    val mapCameraPositionState = mCameraPositionState.asSharedFlow()
 
     init {
         fetchChips()
@@ -73,20 +76,25 @@ class MapViewModel @Inject constructor(
         }
     }
 
-    private fun fetchEstablishments(location: com.afoxplus.places.domain.entities.Location) =
+    fun fetchEstablishments() {
+        fetchEstablishments(mLastKnownLocation.value)
+    }
+
+    private fun fetchEstablishments(location: PlaceLocation) =
         viewModelScope.launch(uiKitCoroutineDispatcher.getIODispatcher()) {
             try {
-                mEstablishments.value = ListLoading()
-                mEstablishmentVOs.value = listOf()
+                mEstablishmentsState.value = ListLoading()
+                mEstablishmentMarkers.value = listOf()
                 val results = fetchEstablishments.invoke(
                     selectedTypes,
                     location
                 )
-                mEstablishments.value = ListSuccess(results.map {
+                mEstablishmentsState.value = ListSuccess(results.map {
                     Establishment(
                         imageLandscape = it.imageBanner,
                         imagePortrait = it.imageLogo,
                         name = it.name,
+                        primaryType = it.primaryType,
                         description = it.description,
                         hasSubscription = it.hasSubscription,
                         isOpen = it.isOpen,
@@ -100,31 +108,39 @@ class MapViewModel @Inject constructor(
                 mapEstablishmentVO(results, 0)
 
             } catch (ex: Exception) {
-                mEstablishmentVOs.value = listOf()
-                mEstablishments.value = ListError(ex)
+                mEstablishmentMarkers.value = listOf()
+                mEstablishmentsState.value = ListError(ex)
             }
         }
 
     private fun mapEstablishmentVO(
-        list: List<com.afoxplus.places.domain.entities.Establishment>,
+        list: List<PlaceEstablishment>,
         selectedIndex: Int
     ) {
-        val establishmentVOs = list.map { EstablishmentVO(false, it) }
-        establishmentVOs[selectedIndex].isSelected = true
-        mEstablishmentVOs.value = establishmentVOs
+        viewModelScope.launch(uiKitCoroutineDispatcher.getMainDispatcher()) {
+            if (list.isNotEmpty()) {
+                val establishmentVOs = list.map { EstablishmentVO(false, it) }
+                establishmentVOs[selectedIndex].isSelected = true
+                mEstablishmentMarkers.value = establishmentVOs
+                mCameraPositionState.emit(establishmentVOs[selectedIndex].establishment.location)
+            }
+        }
     }
 
-    fun setMapCurrentLocation(location: Location?) {
-        if (location?.latitude != lastKnownLocation.value?.latitude && location?.longitude != lastKnownLocation.value?.longitude) {
-            mLastKnownLocation.value = location
-            location?.let {
-                fetchEstablishments(
-                    com.afoxplus.places.domain.entities.Location(
-                        it.latitude,
-                        it.longitude
-                    )
-                )
+    fun updateLocation(latLng: LatLng) {
+        mLastKnownLocation.value =
+            PlaceLocation(latitude = latLng.latitude, longitude = latLng.longitude)
+    }
+
+    fun setMapCurrentLocation(location: PlaceLocation) {
+        viewModelScope.launch(uiKitCoroutineDispatcher.getMainDispatcher()) {
+            mCameraPositionState.emit(location)
+            if (location.latitude != mLastKnownLocation.value.latitude
+                && location.longitude != mLastKnownLocation.value.longitude
+            ) {
+                mLastKnownLocation.value = location
             }
+            fetchEstablishments(location)
         }
     }
 
@@ -132,14 +148,7 @@ class MapViewModel @Inject constructor(
         selectedTypes.clear()
         selectedTypes.addAll(chipItems.map { it.name })
         mapSelectedChips(chipItems.map { it.name })
-        mLastKnownLocation.value?.let {
-            fetchEstablishments(
-                com.afoxplus.places.domain.entities.Location(
-                    it.latitude,
-                    it.longitude
-                )
-            )
-        }
+        fetchEstablishments(mLastKnownLocation.value)
     }
 
     fun onEstablishmentClick(index: Int) {
@@ -148,7 +157,7 @@ class MapViewModel @Inject constructor(
         }
     }
 
-    fun handleResultEstablishment(location: com.afoxplus.places.domain.entities.Location) {
+    fun handleResultEstablishment(location: PlaceLocation) {
         mapSelectedChips(emptyList())
         fetchEstablishments(location)
     }
@@ -168,5 +177,9 @@ class MapViewModel @Inject constructor(
                     ChipItem(it, isSelected)
                 })
         }
+    }
+
+    companion object {
+        val DEFAULT_COORDINATES: PlaceLocation = PlaceLocation(-8.11599, -79.02998)
     }
 }

@@ -20,6 +20,7 @@ import com.afoxplus.places.delivery.utils.askForLocationPermission
 import com.afoxplus.places.delivery.utils.getCurrentLocation
 import com.afoxplus.places.delivery.utils.hasLocationPermission
 import com.afoxplus.places.delivery.viewmodels.MapViewModel
+import com.afoxplus.places.delivery.viewmodels.MapViewModel.Companion.DEFAULT_COORDINATES
 import com.afoxplus.places.domain.entities.Location
 import com.afoxplus.uikit.designsystem.atoms.UIKitBackButton
 import com.afoxplus.uikit.designsystem.businesscomponents.UIKitMapSearch
@@ -62,42 +63,43 @@ internal fun MapScreen(
     onNavigateToAutocomplete: () -> Unit,
     onBackClick: () -> Unit
 ) {
-    val cameraPositionState = rememberCameraPositionState()
+    val defaultLatLng = LatLng(DEFAULT_COORDINATES.latitude, DEFAULT_COORDINATES.longitude)
+    val cameraPositionState = rememberCameraPositionState {
+        position = CameraPosition.fromLatLngZoom(defaultLatLng, 15f)
+    }
+    
     val chipsState = mapViewModel.chips.collectAsStateWithLifecycle()
-    val establishmentState = mapViewModel.establishments.collectAsStateWithLifecycle()
-    val markers = mapViewModel.establishmentsVOs.collectAsStateWithLifecycle()
+    val establishmentState = mapViewModel.establishmentState.collectAsStateWithLifecycle()
+    val markers = mapViewModel.establishmentMarkers.collectAsStateWithLifecycle()
     val savedStateHandle = navController.currentBackStackEntry?.savedStateHandle
     val establishmentResult =
         savedStateHandle?.getStateFlow<Location?>("location_result", null)
             ?.collectAsStateWithLifecycle()
 
-    val currentLocationState = mapViewModel.lastKnownLocation.collectAsStateWithLifecycle()
+    LaunchedEffect(cameraPositionState.position.target) {
+        mapViewModel.updateLocation(cameraPositionState.position.target)
+    }
 
     LaunchedEffect(key1 = Unit) {
-        mapViewModel.establishmentsVOs.collectLatest {
-            it.find { item -> item.isSelected }?.let { item ->
-                cameraPositionState.position =
-                    CameraPosition.fromLatLngZoom(
-                        LatLng(
-                            item.establishment.location.latitude,
-                            item.establishment.location.longitude
-                        ),
-                        20f
-                    )
-            }
+        mapViewModel.mapCameraPositionState.collectLatest {
+            cameraPositionState.position =
+                CameraPosition.fromLatLngZoom(
+                    LatLng(it.latitude, it.longitude),
+                    20f
+                )
         }
     }
 
     LaunchedEffect(key1 = Unit) {
         activity.getCurrentLocation { location ->
-            mapViewModel.setMapCurrentLocation(location)
             location?.let {
-                cameraPositionState.position =
-                    CameraPosition.fromLatLngZoom(
-                        LatLng(location.latitude, location.longitude),
-                        15f
+                mapViewModel.setMapCurrentLocation(
+                    Location(
+                        latitude = it.latitude,
+                        longitude = it.longitude
                     )
-            }
+                )
+            } ?: mapViewModel.fetchEstablishments()
         }
     }
 
@@ -125,8 +127,7 @@ internal fun MapScreen(
                 zoomControlsEnabled = false,
                 compassEnabled = false,
                 mapToolbarEnabled = false
-
-            )
+            ),
         ) {
             markers.value.forEach {
                 val icon = if (it.isSelected) {
@@ -202,14 +203,15 @@ internal fun MapScreen(
         LocationButton(
             onClick = {
                 if (activity.hasLocationPermission()) {
-                    currentLocationState.value?.let { currentLocation ->
-                        val userLocation = LatLng(
-                            currentLocation.latitude,
-                            currentLocation.longitude
-                        )
-                        mapViewModel.setMapCurrentLocation(currentLocation)
-                        cameraPositionState.position =
-                            CameraPosition.fromLatLngZoom(userLocation, 15f)
+                    activity.getCurrentLocation { location ->
+                        location?.let {
+                            mapViewModel.setMapCurrentLocation(
+                                Location(
+                                    latitude = it.latitude,
+                                    longitude = it.longitude
+                                )
+                            )
+                        }
                     }
                 } else {
                     activity.askForLocationPermission()

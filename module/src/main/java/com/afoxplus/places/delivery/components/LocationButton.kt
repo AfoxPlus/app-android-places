@@ -11,7 +11,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import com.afoxplus.uikit.designsystem.atoms.UIKitIcon
 import com.afoxplus.uikit.designsystem.foundations.UIKitTheme
 
@@ -19,16 +18,16 @@ import com.afoxplus.uikit.designsystem.foundations.UIKitTheme
 fun LocationButton(modifier: Modifier = Modifier, onClick: () -> Unit) {
     Box(
         modifier = modifier
-            .size(32.dp)
+            .size(UIKitTheme.spacing.spacing42)
             .background(UIKitTheme.colors.light01, shape = CircleShape)
             .clickable(onClick = onClick)
-            .padding(8.dp),
+            .padding(UIKitTheme.spacing.spacing08),
         contentAlignment = Alignment.Center
     ) {
         UIKitIcon(
             modifier = Modifier
-                .width(24.dp)
-                .height(24.dp),
+                .width(UIKitTheme.spacing.spacing24)
+                .height(UIKitTheme.spacing.spacing24),
             icon = UIKitTheme.icons.icon_current_location
         )
     }
