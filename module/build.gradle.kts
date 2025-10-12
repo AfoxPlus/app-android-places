@@ -121,26 +121,19 @@ dependencies {
     implementation(libs.material)
     implementation(libs.androidx.constraintlayout)
 
+
     // Jetpack Compose
-    implementation(libs.androidx.activity.compose)
-    implementation(libs.androidx.constraintlayout.compose)
-    implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.navigation.compose)
-    implementation(libs.androidx.ui)
-    implementation(libs.androidx.ui.graphics)
-    implementation(libs.androidx.ui.tooling.preview)
-    implementation(libs.androidx.material3)
-    debugImplementation(libs.androidx.ui.tooling)
-    implementation(libs.androidx.material.icons.extended)
+    implementation(platform(libs.compose.bom))
+    implementation(libs.bundles.androidx.compose)
+
     //Image Async
-    implementation(libs.coil.compose)
     implementation(libs.glide)
     ksp(libs.glide.compiler)
 
     //Map
-    implementation(Deps.Arch.map)
-    implementation(Deps.Arch.mapCompose)
-    implementation(Deps.Arch.mapLocation)
+    implementation(libs.play.services.maps)
+    implementation(libs.play.services.location)
+    implementation(libs.maps.compose)
 
     // Coroutines
     implementation(libs.kotlinx.coroutines.core)
@@ -164,16 +157,13 @@ dependencies {
     implementation(libs.logging.interceptor)
 
     // Test
-    testImplementation(Deps.Test.jUnit)
-    testImplementation(Deps.Test.testCore)
-    testImplementation(Deps.Test.truth)
-    testImplementation(Deps.Test.mockitoKotlin)
-    testImplementation(Deps.Test.kotlinCoroutine)
-    testImplementation(Deps.Test.mockitoInline)
-    androidTestImplementation(Deps.Test.androidJUnit)
-    androidTestImplementation(Deps.Test.espresso)
+    testImplementation(libs.bundles.unit.test)
 
     // Business Dependencies
-    implementation(project(":uikit"))
-    implementation(project(":network"))
+    implementation(project(ModuleDependency.Core.DESIGN_SYSTEM))
+    implementation(project(ModuleDependency.Integration.NETWORK))
+
+    //Compose Debug
+    debugImplementation(libs.compose.ui.tooling)
+    debugImplementation(libs.compose.ui.tooling.preview)
 }
