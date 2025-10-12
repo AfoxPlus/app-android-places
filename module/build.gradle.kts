@@ -160,8 +160,8 @@ dependencies {
     testImplementation(libs.bundles.unit.test)
 
     // Business Dependencies
-    implementation(project(ModuleDependency.Core.DESIGN_SYSTEM))
-    implementation(project(ModuleDependency.Integration.NETWORK))
+    implementation(project(":uikit"))
+    implementation(project(":network"))
 
     //Compose Debug
     debugImplementation(libs.compose.ui.tooling)
