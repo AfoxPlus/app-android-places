@@ -78,6 +78,8 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
+    kotlin { jvmToolchain(ConfigureApp.Versions.jdkVersion) }
+
     buildFeatures {
         compose = true
         buildConfig = true
