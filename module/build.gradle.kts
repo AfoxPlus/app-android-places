@@ -13,9 +13,9 @@ plugins {
 }
 
 apply {
-    from(Gradle.Sonarqube)
-    from(Gradle.Jacoco)
-    from(Gradle.UploadArtifact)
+    from(ConfigureApp.Gradle.sonarqube)
+    from(ConfigureApp.Gradle.jacoco)
+    from(ConfigureApp.Gradle.uploadArtifact)
     from("graph.gradle.kts")
 }
 
@@ -162,8 +162,8 @@ dependencies {
     testImplementation(libs.bundles.unit.test)
 
     // Business Dependencies
-    implementation(project(":uikit"))
-    implementation(project(":network"))
+    implementation(project(ModuleDependency.Core.DESIGN_SYSTEM))
+    implementation(project(ModuleDependency.Integration.NETWORK))
 
     //Compose Debug
     debugImplementation(libs.compose.ui.tooling)
